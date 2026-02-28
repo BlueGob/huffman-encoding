@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 )
 type Node struct{
@@ -9,6 +8,10 @@ type Node struct{
 	freq int
 	left_child *Node
 	right_child *Node
+}
+type Code struct{
+	len int
+	bits uint64
 }
 func pop_root(heap []Node) ([]Node,Node) {
 	pos := 0
@@ -66,28 +69,23 @@ func construct_huffman_tree(heap []Node) Node{
 	}
 	return heap[0]
 }
-func print_tree(n Node){
-	fmt.Printf("node_name = %v | freq = %v \n", n.str, n.freq)
+func generate_code(n Node, code uint64, code_map map[string]Code, depth int){	
 	if n.left_child != nil{
-		print_tree(*n.left_child)
+		generate_code(*n.left_child, code<<1, code_map, depth+1)
+	}else{
+		code_map[n.str] = Code{len: depth, bits: code}
 	}
 	if n.right_child != nil{
-		print_tree(*n.right_child)
+		generate_code(*n.right_child, (code<<1) | 1, code_map, depth+1)
+	}else{
+		code_map[n.str] = Code{len: depth, bits: code}
 	}
 }
-func generate_code(n Node, code string, code_map map[string]string){	
-	if n.left_child != nil{
-		generate_code(*n.left_child, code+"0", code_map)
-	}else{
-		code_map[n.str] = code
-	}
-	if n.right_child != nil{
-		generate_code(*n.right_child, code+"1", code_map)
-	}else{
-		code_map[n.str] = code
-	}
+func write(code Code, bitsWriter *BitsWriter){
+	for i:= code.len; i > 0; i--{
+		(*bitsWriter).WriteBit(uint8((code.bits >> (i - 1)) & 1))
+	} 
 }
-
 func main(){
 	file_name := os.Args[1]
 	
@@ -102,35 +100,39 @@ func main(){
 	
 	// calculate letters freqs
 	for i := range content{
-		// if string(content[i]) == "\n"{
-		// 	continue
-		// }
+		if content[i] == '\n'{continue}
 		letters_freq[string(content[i])] += 1	
 	}
-	for k, v := range letters_freq{
-		fmt.Printf("%v => %v \n", string(k), v)
-	}	
+	// for k, v := range letters_freq{
+	// 	fmt.Printf("%v => %v \n", string(k), v)
+	// }	
 	//init the heap
 	for k, v := range letters_freq{
 		heap = bubble_up(heap, Node{str: k,freq: v, left_child: nil, right_child: nil})
 	}
 
-	// for i:=range heap{
-	// 	fmt.Printf("name = %v, freq = %v \n", heap[i].str, heap[i].freq)
-	// }
 	root := construct_huffman_tree(heap)
-//	print_tree(root)
-	code := make(map[string]string)
-	generate_code(root, "", code)
-	fmt.Println(len(code))		
-	for k, v:=range code{
-		fmt.Printf("letter = %v, code = %v \n", k, v)
-	}
+	code := make(map[string]Code)
+	generate_code(root, 0, code, 0)
+	// fmt.Println(len(code))		
+	// for k, v:=range code{
+	// 	fmt.Printf("letter = %v, code = %0*b \n", k, v.len, v.bits)
+	// }
 	//calculate file size
-	var total uint64
-	for k ,v := range code{
-		total += uint64(len(v) * letters_freq[k])
-	}
-	fmt.Printf("new size = %vMB", total/(8*1000*1000))
+	// var total uint64
+	// for k ,v := range code{
+	// 	total += uint64(v.len * letters_freq[k])
+	// }
+	// fmt.Printf("new size = %vMB", total/(8))
 
+	file, err := os.OpenFile("output.hfmn", os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	bitsWriter := BitsWriter{file: file, threshold: 64*1000}
+	for i:= range content{
+		write(code[string(content[i])], &bitsWriter)
+	}	
+	bitsWriter.Flush()
 }
