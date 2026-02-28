@@ -35,3 +35,8 @@ func (b BitsWriter) Flush(){
 	fmt.Printf("writen %v byte\n", n)
 }
 
+func (b *BitsWriter) Write(code Code){
+	for i:= code.len; i > 0; i--{
+		b.WriteBit(uint8((code.bits >> (i - 1)) & 1))
+	} 
+}
