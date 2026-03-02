@@ -2,12 +2,12 @@ package main
 
 type Node struct{
 	name string
-	freq int64
+	freq uint64
 	left_child *Node
 	right_child *Node
 }
 type Code struct{
-	len int
+	len uint64
 	bits uint64
 }
 
@@ -21,34 +21,38 @@ func build_huffman_tree(heap []Node) Node{
 	}
 	return heap[0]
 }
-func generate_code(n Node, code uint64, code_map map[string]Code, depth int){	
+func generate_code(n Node, code uint64, code_map map[byte]Code, depth uint64){	
 	if n.left_child != nil{
 		generate_code(*n.left_child, code<<1, code_map, depth+1)
 	}else{
-		code_map[n.name] = Code{len: depth, bits: code}
+		code_map[n.name[0]] = Code{len: depth, bits: code}
 	}
 	if n.right_child != nil{
 		generate_code(*n.right_child, (code<<1) | 1, code_map, depth+1)
 	}else{
-		code_map[n.name] = Code{len: depth, bits: code}
+		code_map[n.name[0]] = Code{len: depth, bits: code}
 	}
 }
 
-func HuffmanEncode(file_content []byte) map[string]Code{
-	code := make(map[string]Code)
+func HuffmanEncode(file_content []byte) Node{
 	heap := make([]Node, 0, 26)
 	freqs := letters_freqs(file_content)
 	for k, v := range freqs{
 		heap = Insert(heap, Node{name: k, freq: v, left_child: nil, right_child: nil})
 	}			
-	root := build_huffman_tree(heap)
-	generate_code(root, 0, code, 0)
+	return build_huffman_tree(heap)
+}
+func TreeToDict(node Node) map[byte]Code{
+	code := make(map[byte]Code)
+	generate_code(node, 0, code, 0)
 	return code
 }
-func letters_freqs(file_content []byte) map[string]int64{
-	m := make(map[string]int64)
+
+func letters_freqs(file_content []byte) map[string]uint64{
+	m := make(map[string]uint64)
 	for i := range file_content {
 		m[string(file_content[i])] += 1
 	}
 	return m
 }
+

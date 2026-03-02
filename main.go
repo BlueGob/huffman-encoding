@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"fmt"
 )
 
 func main(){
@@ -13,16 +14,23 @@ func main(){
 		panic(err)
 	}
 	
-	code := HuffmanEncode(content)
-
+	huffman_tree := HuffmanEncode(content)
+	code := TreeToDict(huffman_tree)
+	for k, v :=range code{ //for debugging !
+		fmt.Printf("byte = %v, freq %0*b \n", string(k), v.len, v.bits)
+	}
+	fmt.Println("len map = ", len(code))
 	file, err := os.OpenFile("output.hfmn", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
-	bitsWriter := BitsWriter{file: file, threshold: 64*1000}
-	for i:= range content{
-		bitsWriter.Write(code[string(content[i])])
-	}	
-	bitsWriter.Flush()
+	Compress(huffman_tree, content, file)
+
+	file_content, err := os.ReadFile("output.hfmn")
+
+	if err != nil {
+		panic(err)
+	}
+	Decompress(file_content)
 }
