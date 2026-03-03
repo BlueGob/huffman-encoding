@@ -1,7 +1,7 @@
 package main
 
 type Node struct{
-	name string
+	name byte
 	freq uint64
 	left_child *Node
 	right_child *Node
@@ -22,15 +22,11 @@ func build_huffman_tree(heap []Node) Node{
 	return heap[0]
 }
 func generate_code(n Node, code uint64, code_map map[byte]Code, depth uint64){	
-	if n.left_child != nil{
+	if n.left_child == nil && n.right_child == nil{
+		code_map[n.name] = Code{len: depth, bits: code}
+	}else{
 		generate_code(*n.left_child, code<<1, code_map, depth+1)
-	}else{
-		code_map[n.name[0]] = Code{len: depth, bits: code}
-	}
-	if n.right_child != nil{
 		generate_code(*n.right_child, (code<<1) | 1, code_map, depth+1)
-	}else{
-		code_map[n.name[0]] = Code{len: depth, bits: code}
 	}
 }
 
@@ -42,16 +38,17 @@ func HuffmanEncode(file_content []byte) Node{
 	}			
 	return build_huffman_tree(heap)
 }
+
 func TreeToDict(node Node) map[byte]Code{
 	code := make(map[byte]Code)
 	generate_code(node, 0, code, 0)
 	return code
 }
 
-func letters_freqs(file_content []byte) map[string]uint64{
-	m := make(map[string]uint64)
+func letters_freqs(file_content []byte) map[byte]uint64{
+	m := make(map[byte]uint64)
 	for i := range file_content {
-		m[string(file_content[i])] += 1
+		m[file_content[i]] += 1
 	}
 	return m
 }

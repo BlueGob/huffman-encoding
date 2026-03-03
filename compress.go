@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"fmt"
+	_"fmt"
 	"encoding/binary"
 )
 
@@ -29,11 +29,10 @@ func (b *BitsWriter) writeBit(bit uint8) {
 	}
 }
 func (b BitsWriter) flush(){
-	n, err := b.file.Write(b.output_buffer)
+	_, err := b.file.Write(b.output_buffer)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("writen %v byte\n", n)
 }
 
 func (b *BitsWriter) write(code Code){
@@ -44,7 +43,7 @@ func (b *BitsWriter) write(code Code){
 func header(node Node, h []byte)[]byte{
 	if node.right_child == nil && node.left_child == nil{
 		h = append(h, 1)
-		h = append(h, node.name[0])
+		h = append(h, node.name)
 		return h
 	}
 	h = append(h, 0)
@@ -56,7 +55,6 @@ func Compress(node Node, content []byte, file *os.File){
 	bitsWriter := BitsWriter{file: file, threshold: 64*1000}
 	metadata := make([]byte, 0)
 	metadata = header(node, metadata)
-	for i := range metadata{fmt.Printf("%b \n", metadata[i])}
 	header_len := make([]byte, 4)
 	binary.BigEndian.PutUint32(header_len, uint32(len(metadata)))
 	file.Write(header_len)

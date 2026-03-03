@@ -21,21 +21,22 @@ func Decompress(content []byte){
 		for j := range 8{
 			n = decode((file_content[i] >> (7 - j)) & 1, n)
 			if n.name != 0{
-				res =append(res, n.name)
+				res = append(res, n.name)
 				n = m
 			}
 		}
+		if len(res) >= 64*1000{
+			fmt.Print(string(res))
+			res = res[:0]
+		}
 	}
-	for i := range res{
-		fmt.Printf("%v", string(res[i]))
-	}
+	fmt.Print(string(res))
 }
 func decode(b byte, t *DecodeTree) *DecodeTree{
 	if b == 1{
 		return t.right_child
-	}else{
-		return t.left_child
 	}
+	return t.left_child
 }
 
 func decodeHeaders(content []byte, i *int) *DecodeTree{
