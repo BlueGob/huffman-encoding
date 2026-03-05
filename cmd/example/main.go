@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/BlueGob/huffman-enconding"
+	"github.com/BlueGob/huffman-encoding"
 	"os"
 )
 

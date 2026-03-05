@@ -1,3 +1,3 @@
-module github.com/BlueGob/huffman-enconding
+module github.com/BlueGob/huffman-encoding
 
 go 1.25.5

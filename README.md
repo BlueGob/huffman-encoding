@@ -5,7 +5,7 @@ Built around io.Reader and io.Writer for maximum portability
 
 ## Instalation
 ```bash
-go get github.com/BlueGob/huffman-enconding
+go get github.com/BlueGob/huffman-encoding
 ```
 ## API reference
 | Function      | Signature                                          |
@@ -22,7 +22,7 @@ package main
 
 import (
 	"os"
-	"github.com/BlueGob/huffman-enconding"
+	"github.com/BlueGob/huffman-encoding"
 )
 func main() {
 	// Open source file
@@ -52,7 +52,7 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
-	"github.com/BlueGob/huffman-enconding"
+	"github.com/BlueGob/huffman-encoding"
 )
 
 func main() {
@@ -79,7 +79,7 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
-	"github.com/BlueGob/huffman-enconding"
+	"github.com/BlueGob/huffman-encoding"
 )
 
 func main() {
