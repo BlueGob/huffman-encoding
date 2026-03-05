@@ -1,38 +1,25 @@
 package main
 
 import (
-	"os"
-	"bytes"
-	"fmt"
 	"github.com/BlueGob/huffman-enconding"
+	"os"
 )
 
-func main(){
-	file_name := os.Args[1]	
-	f, err := os.Open(file_name)
-	if err != nil{
-		panic(err)
-	}
-	defer f.Close()
-	huffman_tree, err := huffman.HuffmanEncode(f)
+func main() {
+	// Open source file
+	input, _ := os.Open("../../testdata/t8.shakespeare.txt")
+	defer input.Close()
 
-	file, err := os.OpenFile("out.hfmn", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-	_, err = f.Seek(0,0)
-	if err != nil{
-		panic(err)
-	}
+	// 1. Build the tree
+	tree, _ := huffman.HuffmanEncode(input)
 
-	huffman.Compress(huffman_tree, f, file)
+	// 2. Reset file pointer to beginning
+	input.Seek(0, 0)
 
-	file, err = os.Open("out.hfmn")
-	if err != nil {
-		panic(err)
-	}
-	var b bytes.Buffer
-	huffman.Decompress(file, &b)
-	fmt.Println(string(b.String()))
+	// 3. Create destination file
+	output, _ := os.Create("document.huff")
+	defer output.Close()
+
+	// 4. Compress
+	huffman.Compress(tree, input, output)
 }
