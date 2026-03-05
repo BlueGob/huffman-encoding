@@ -1,6 +1,6 @@
 package main
 
-func Pop(heap []Node) ([]Node,Node) {
+func pop(heap []Node) ([]Node,Node) {
 	pos := 0
 	var smallest_child int
 	element := heap[pos]
@@ -29,7 +29,7 @@ func Pop(heap []Node) ([]Node,Node) {
 	return heap, element
 }
 
-func Insert(heap []Node, n Node) []Node {
+func insert(heap []Node, n Node) []Node {
 	heap = append(heap, n)
 	pos := len(heap) - 1	
 	for pos != 0 {

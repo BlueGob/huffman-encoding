@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/binary"
+	"bufio"
+	"io"
 	"fmt"
 )
 type DecodeTree struct{
@@ -10,27 +12,53 @@ type DecodeTree struct{
 	right_child *DecodeTree
 }
 
-func Decompress(content []byte){
-	header_len := binary.BigEndian.Uint32(content[:4])
+func Decompress(in io.Reader, out io.Writer) error{
+	var header_len uint32 
+	//reader header length
+	r := bufio.NewReader(in)
+	err := binary.Read(r, binary.BigEndian, &header_len)
+	if err != nil{
+		return err
+	}
+	//extract header data
+	headers := make([]byte, header_len)
+	_, err = io.ReadFull(r, headers)	
+	if err != nil {
+		return err
+	}
+	//decode headers	
 	i := 0
-	m := decodeHeaders(content[4:header_len+4], &i)
-	n := m
-	file_content := content[4+header_len:]
-	res := make([]byte, 0, 64*1000)
-	for i := range file_content{
-		for j := range 8{
-			n = decode((file_content[i] >> (7 - j)) & 1, n)
-			if n.name != 0{
-				res = append(res, n.name)
-				n = m
+	treeRoot, err := decodeHeaders(headers, &i)
+	if err != nil {
+		return err
+	}
+	tree := treeRoot
+
+	w := bufio.NewWriter(out)
+	buf := make([]byte, 4096)
+	//decode text
+	for {
+		n, err := r.Read(buf)
+		if n > 0{
+			for i := range n {
+				for j := range 8{
+					tree = decode((buf[i] >> (7 - j)) & 1, tree)
+					if tree.name != 0{
+						w.WriteByte(tree.name)
+						tree = treeRoot
+					}
+				}
 			}
 		}
-		if len(res) >= 64*1000{
-			fmt.Print(string(res))
-			res = res[:0]
+		if err == io.EOF {
+			w.Flush()
+			break
+		}
+		if err != nil{
+			return err
 		}
 	}
-	fmt.Print(string(res))
+	return nil
 }
 func decode(b byte, t *DecodeTree) *DecodeTree{
 	if b == 1{
@@ -39,18 +67,30 @@ func decode(b byte, t *DecodeTree) *DecodeTree{
 	return t.left_child
 }
 
-func decodeHeaders(content []byte, i *int) *DecodeTree{
+func decodeHeaders(content []byte, i *int) (*DecodeTree,error){
+	if (*i) >= len(content){
+		return nil, fmt.Errorf("Malformed header")
+	}
 	code := content[*i]
 	*i = (*i) + 1
 	if int(code) == 1{
+		if (*i) >= len(content){
+			return nil, fmt.Errorf("Malformed header")
+		}
 		name := content[*i]
 		*i = (*i)+1
-		return &DecodeTree{name: name}
+		return &DecodeTree{name: name}, nil
 	}	
-	left_child := decodeHeaders(content, i)
-	right_child := decodeHeaders(content, i)
+	left_child, err := decodeHeaders(content, i)
+	if err != nil {
+		return nil, err
+	}
+	right_child, err := decodeHeaders(content, i)
+	if err != nil {
+		return nil, err
+	}
 	return &DecodeTree{
 		left_child: left_child,
 		right_child: right_child,
-	}
+	}, nil
 }
