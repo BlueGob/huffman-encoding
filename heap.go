@@ -1,4 +1,4 @@
-package main
+package huffman
 
 func pop(heap []Node) ([]Node,Node) {
 	pos := 0
